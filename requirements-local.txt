@@ -3,3 +3,4 @@ pytest
 requests
 sqlalchemy
 black
+psycopg2-binary
