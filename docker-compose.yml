@@ -2,6 +2,7 @@ version: '3.7'
 services:
   web:
     build: .
+    command: /start-reload.sh
     volumes:
       - ./app:/app
     ports:
