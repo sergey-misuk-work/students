@@ -10,6 +10,7 @@ from auth import (
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     get_password_hash,
+    get_current_user,
 )
 from datetime import timedelta
 
@@ -26,7 +27,9 @@ app = FastAPI()
 
 
 @app.get("/students", response_model=schemas.StudentRetrieveList)
-async def students(db: Session = Depends(get_db)):
+async def students(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
     students = db.query(models.Student).all()
     return schemas.StudentRetrieveList(students=students, totalStudents=len(students))
 
