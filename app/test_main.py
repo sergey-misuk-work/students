@@ -142,9 +142,40 @@ def test_create_student(test_students, test_token, test_db):
 
     body = response.json()
 
-    assert 'id' in body
-    assert len(str(body['id'])) == 8
+    assert "id" in body
+    assert len(str(body["id"])) == 8
 
-    assert 'created_at' in body
+    assert "created_at" in body
 
     assert test_db.query(models.Student).count() == 4
+
+
+def test_delete_student(test_students, test_token, test_db):
+    response = client.post(
+        "/students",
+        headers={"Authorization": f"Bearer {test_token}"},
+        json={
+            "first_name": "John",
+            "last_name": "Doe",
+            "date_of_birth": "2003-04-05T00:00:00.000Z",
+            "school_grade": 50,
+            "students_average": 55,
+        },
+    )
+
+    assert test_db.query(models.Student).count() == 4
+
+    body = response.json()
+    student_id = body["id"]
+
+    response = client.delete(
+        f"/students/{student_id}", headers={"Authorization": f"Bearer {test_token}"}
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert "deleted_at" in body
+
+    assert test_db.query(models.Student).count() == 3

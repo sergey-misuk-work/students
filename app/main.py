@@ -44,6 +44,19 @@ async def create_student(
     return insert_student(db, models.Student(**student.dict()))
 
 
+@app.delete("/students/{student_id}", response_model=schemas.StudentDelete)
+async def delete_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    student = db.query(models.Student).filter_by(id=student_id).first()
+    db.delete(student)
+    db.flush()
+    db.commit()
+    return student
+
+
 @app.post("/token", response_model=TokenRetrieve)
 async def create_token(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()

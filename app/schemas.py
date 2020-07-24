@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 
@@ -18,6 +18,13 @@ class StudentCreate(StudentBase):
 class StudentRetrieve(StudentBase):
     id: int
     created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class StudentDelete(StudentBase):
+    deleted_at: datetime = Field(default_factory=datetime.now)
 
     class Config:
         orm_mode = True
