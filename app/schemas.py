@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -11,15 +11,20 @@ class StudentBase(BaseModel):
     students_average: Optional[int]
 
 
-class StudentCreateRequest(StudentBase):
+class StudentCreate(StudentBase):
     pass
 
 
-class StudentRetrieveResponse(StudentBase):
+class StudentRetrieve(StudentBase):
     id: int
 
     class Config:
         orm_mode = True
+
+
+class StudentRetrieveList(BaseModel):
+    totalStudents: int
+    students: List[StudentRetrieve]
 
 
 class TokenRetrieve(BaseModel):

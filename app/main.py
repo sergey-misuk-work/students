@@ -3,7 +3,6 @@ from database import engine, get_db
 import models
 import schemas
 from sqlalchemy.orm import Session
-from typing import List
 from schemas import TokenRetrieve
 from fastapi.security import OAuth2PasswordRequestForm
 from auth import (
@@ -26,9 +25,10 @@ session.commit()
 app = FastAPI()
 
 
-@app.get("/students", response_model=List[schemas.StudentRetrieveResponse])
+@app.get("/students", response_model=schemas.StudentRetrieveList)
 async def students(db: Session = Depends(get_db)):
-    return db.query(models.Student).all()
+    students = db.query(models.Student).all()
+    return schemas.StudentRetrieveList(students=students, totalStudents=len(students))
 
 
 @app.post("/token", response_model=TokenRetrieve)
