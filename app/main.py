@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 from typing import List
 from schemas import TokenRetrieve
 from fastapi.security import OAuth2PasswordRequestForm
-from auth import authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
+from auth import (
+    authenticate_user,
+    create_access_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_password_hash,
+)
 from datetime import timedelta
 
 
@@ -14,7 +19,7 @@ models.Base.metadata.create_all(bind=engine)
 
 # create a test user
 session = next(get_db())
-session.merge(models.User(username='test', hashed_password=get_password_hash('test')))
+session.merge(models.User(username="test", hashed_password=get_password_hash("test")))
 session.flush()
 session.commit()
 
@@ -27,7 +32,9 @@ async def students(db: Session = Depends(get_db)):
 
 
 @app.post("/token", response_model=TokenRetrieve)
-async def create_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+async def create_token(
+    db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
+):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(

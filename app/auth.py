@@ -9,7 +9,7 @@ from main import get_db
 from models import User
 
 
-SECRET_KEY = '20265516bedc974d13cfa068f53cc41747a1c2a2de5425d5b29422f105e17b1f'
+SECRET_KEY = "20265516bedc974d13cfa068f53cc41747a1c2a2de5425d5b29422f105e17b1f"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -46,7 +46,9 @@ def create_access_token(data: dict, expires_delta: timedelta):
     return encoded_jwt
 
 
-async def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+async def get_current_user(
+    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
