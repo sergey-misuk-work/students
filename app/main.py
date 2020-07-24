@@ -13,6 +13,7 @@ from auth import (
     get_current_user,
 )
 from datetime import timedelta
+from utils import insert_student
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -32,6 +33,15 @@ async def students(
 ):
     students = db.query(models.Student).all()
     return schemas.StudentRetrieveList(students=students, totalStudents=len(students))
+
+
+@app.post("/students", response_model=schemas.StudentRetrieve)
+async def create_student(
+    student: schemas.StudentCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return insert_student(db, models.Student(**student.dict()))
 
 
 @app.post("/token", response_model=TokenRetrieve)
