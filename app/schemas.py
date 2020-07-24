@@ -17,6 +17,7 @@ class StudentCreate(StudentBase):
 
 class StudentRetrieve(StudentBase):
     id: int
+    created_at: datetime
 
     class Config:
         orm_mode = True

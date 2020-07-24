@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from database import Base
+from sqlalchemy.sql import func
 
 
 class Student(Base):
@@ -12,6 +13,7 @@ class Student(Base):
     date_of_birth = Column(DateTime(timezone=True))
     school_grade = Column(Integer)
     students_average = Column(Integer)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class User(Base):
