@@ -3,9 +3,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from schemas import UserInternal, TokenData
+from schemas import TokenData
 from sqlalchemy.orm import Session
 from main import get_db
+from models import User
 
 
 SECRET_KEY = '20265516bedc974d13cfa068f53cc41747a1c2a2de5425d5b29422f105e17b1f'
@@ -20,10 +21,12 @@ def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
 
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+
 def get_user(db: Session, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInternal(**user_dict)
+    return db.query(User).filter_by(username=username).first()
 
 
 def authenticate_user(db: Session, username: str, password: str):
