@@ -12,6 +12,6 @@ def insert_student(db: Session, student: Student):
             db.add(student)
             db.flush()
             db.commit()
-            break
+            return student
         except IntegrityError:
             pass
