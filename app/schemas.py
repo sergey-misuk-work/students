@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 
 
@@ -12,7 +12,17 @@ class StudentBase(BaseModel):
 
 
 class StudentCreate(StudentBase):
-    pass
+    @validator("school_grade")
+    def check_school_grade(cls, value):
+        if 1 <= value <= 12:
+            return value
+        raise ValueError("School grade takes values between 1 and 12")
+
+    @validator("students_average")
+    def check_students_average(cls, value):
+        if 0 <= value <= 100:
+            return value
+        raise ValueError("Student's average takes values between 0 and 100")
 
 
 class StudentRetrieve(StudentBase):

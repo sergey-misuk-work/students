@@ -126,16 +126,17 @@ def test_retrieve_students(test_students, test_token):
 
 
 def test_create_student(test_students, test_token, test_db):
+    student_json = {
+        "first_name": "John",
+        "last_name": "Doe",
+        "date_of_birth": "2003-04-05T00:00:00.000Z",
+        "school_grade": 5,
+        "students_average": 55,
+    }
     response = client.post(
         "/students",
         headers={"Authorization": f"Bearer {test_token}"},
-        json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "date_of_birth": "2003-04-05T00:00:00.000Z",
-            "school_grade": 50,
-            "students_average": 55,
-        },
+        json=student_json,
     )
 
     assert response.status_code == 200
@@ -149,6 +150,28 @@ def test_create_student(test_students, test_token, test_db):
 
     assert test_db.query(models.Student).count() == 4
 
+    # check validation
+    student_json['school_grade'] = 13
+    student_json['students_average'] = 101
+
+    response = client.post(
+        "/students",
+        headers={"Authorization": f"Bearer {test_token}"},
+        json=student_json,
+    )
+
+    assert response.status_code == 422
+
+    body = response.json()
+
+    assert 'detail' in body
+
+    error_location = body['detail'][0]['loc']
+    assert error_location == ['body', 'student', 'school_grade']
+
+    error_location = body['detail'][1]['loc']
+    assert error_location == ['body', 'student', 'students_average']
+
 
 def test_delete_student(test_students, test_token, test_db):
     response = client.post(
@@ -158,7 +181,7 @@ def test_delete_student(test_students, test_token, test_db):
             "first_name": "John",
             "last_name": "Doe",
             "date_of_birth": "2003-04-05T00:00:00.000Z",
-            "school_grade": 50,
+            "school_grade": 5,
             "students_average": 55,
         },
     )
