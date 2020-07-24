@@ -7,6 +7,7 @@ import models
 from auth import get_password_hash
 import pytest
 from datetime import date
+from utils import insert_student
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -47,42 +48,46 @@ def test_user(test_db):
 @pytest.fixture
 def test_students(test_db):
     test_db.query(models.Student).delete()
-    test_db.add(
+    test_db.flush()
+    test_db.commit()
+
+    insert_student(
+        test_db,
         models.Student(
             first_name="Cynthia",
             last_name="Henderson",
             date_of_birth=date(2000, 1, 2),
             school_grade=6,
             students_average=60,
-        )
+        ),
     )
-    test_db.add(
+    insert_student(
+        test_db,
         models.Student(
             first_name="Marilyn",
             last_name="Snyder",
             date_of_birth=date(2001, 2, 3),
             school_grade=8,
             students_average=70,
-        )
+        ),
     )
-    test_db.add(
+    insert_student(
+        test_db,
         models.Student(
             first_name="David",
             last_name="Dandrea",
             date_of_birth=date(2002, 3, 4),
             school_grade=10,
             students_average=80,
-        )
+        ),
     )
-    test_db.flush()
-    test_db.commit()
     return test_db.query(models.Student).all()
 
 
 @pytest.fixture(scope="module")
 def test_token(test_user):
     response = client.post("/token", data={"username": "test", "password": "test"})
-    return response.json()['access_token']
+    return response.json()["access_token"]
 
 
 def test_create_token(test_user):
@@ -104,9 +109,17 @@ def test_protected_routes():
 
 
 def test_retrieve_students(test_students, test_token):
-    response = client.get("/students", headers={'Authorization': f'Bearer {test_token}'})
+    response = client.get(
+        "/students", headers={"Authorization": f"Bearer {test_token}"}
+    )
 
     assert response.status_code == 200
+
     body = response.json()
+
     assert "totalStudents" in body
     assert body["totalStudents"] == 3
+
+    assert "students" in body
+    for student in body["students"]:
+        assert len(str(student["id"])) == 8
