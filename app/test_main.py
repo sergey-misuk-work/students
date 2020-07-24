@@ -123,3 +123,28 @@ def test_retrieve_students(test_students, test_token):
     assert "students" in body
     for student in body["students"]:
         assert len(str(student["id"])) == 8
+
+
+def test_create_student(test_students, test_token, test_db):
+    response = client.post(
+        "/students",
+        headers={"Authorization": f"Bearer {test_token}"},
+        json={
+            "first_name": "John",
+            "last_name": "Doe",
+            "date_of_birth": "2003-04-05T00:00:00.000Z",
+            "school_grade": 50,
+            "students_average": 55,
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert 'id' in body
+    assert len(str(body['id'])) == 8
+
+    assert 'created_at' in body
+
+    assert test_db.query(models.Student).count() == 4
