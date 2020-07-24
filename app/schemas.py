@@ -20,3 +20,20 @@ class StudentRetrieveResponse(StudentBase):
 
     class Config:
         orm_mode = True
+
+
+class TokenRetrieve(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+
+class UserRetrieve(BaseModel):
+    username: str
+
+
+class UserInternal(UserRetrieve):
+    hashed_password: str
