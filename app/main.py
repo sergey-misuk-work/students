@@ -15,6 +15,8 @@ from auth import (
 from datetime import timedelta
 from utils import insert_student
 from sqlalchemy.sql import func
+import operator
+import functools
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -74,7 +76,41 @@ async def get_average_for_grade(
         .group_by(models.Student.school_grade)
         .first()
     )
-    return dict(zip(('grade', 'average', 'numStudents'), result))
+    return dict(zip(("grade", "average", "numStudents"), result))
+
+
+@app.get("/stat/std-dev/{grade}", response_model=schemas.StdDevForGrade)
+async def get_std_dev_for_grade(
+    grade: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    m, n = (
+        db.query(
+            func.avg(models.Student.students_average).label("average"),
+            func.count(models.Student.id).label("numStudents"),
+        )
+        .filter_by(school_grade=grade)
+        .group_by(models.Student.school_grade)
+        .first()
+    )
+    students_average_values = map(
+        operator.itemgetter(0),
+        db.query(models.Student.students_average).filter_by(school_grade=grade).all(),
+    )
+    # TODO: make more readable
+    std_dev = pow(
+        sum(
+            map(
+                functools.partial(pow, exp=2),
+                map(functools.partial(operator.sub, m), students_average_values),
+            )
+        )
+        / n,
+        0.5,
+    )
+
+    return {"grade": grade, "average": m, "stdDev": std_dev, "numStudents": n}
 
 
 @app.post("/token", response_model=TokenRetrieve)

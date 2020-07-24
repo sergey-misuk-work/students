@@ -58,3 +58,10 @@ class AverageForGrade(BaseModel):
     grade: int
     average: int
     numStudents: int
+
+
+class StdDevForGrade(BaseModel):
+    grade: int
+    average: float
+    stdDev: float
+    numStudents: int

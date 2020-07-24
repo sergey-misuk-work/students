@@ -213,12 +213,12 @@ def test_get_average_for_grade(test_students, test_token):
 
     body = response.json()
 
-    assert 'grade' in body
-    assert body['grade'] == 6
-    assert 'average' in body
-    assert body['average'] == 60
-    assert 'numStudents' in body
-    assert body['numStudents'] == 1
+    assert "grade" in body
+    assert body["grade"] == 6
+    assert "average" in body
+    assert body["average"] == 60
+    assert "numStudents" in body
+    assert body["numStudents"] == 1
 
     response = client.get(
         "/stat/grade/8", headers={"Authorization": f"Bearer {test_token}"}
@@ -228,9 +228,45 @@ def test_get_average_for_grade(test_students, test_token):
 
     body = response.json()
 
-    assert 'grade' in body
+    assert "grade" in body
+    assert body["grade"] == 8
+    assert "average" in body
+    assert body["average"] == 75
+    assert "numStudents" in body
+    assert body["numStudents"] == 2
+
+
+def test_std_dev_for_grade(test_students, test_token):
+    response = client.get(
+        "/stat/std-dev/6", headers={"Authorization": f"Bearer {test_token}"}
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert "grade" in body
+    assert body['grade'] == 6
+    assert "average" in body
+    assert body['average'] == 60.0
+    assert "stdDev" in body
+    assert body['stdDev'] == 0
+    assert "numStudents" in body
+    assert body['numStudents'] == 1
+
+    response = client.get(
+        "/stat/std-dev/8", headers={"Authorization": f"Bearer {test_token}"}
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert "grade" in body
     assert body['grade'] == 8
-    assert 'average' in body
-    assert body['average'] == 75
-    assert 'numStudents' in body
+    assert "average" in body
+    assert body['average'] == 75.0
+    assert "stdDev" in body
+    assert body['stdDev'] == 5.0
+    assert "numStudents" in body
     assert body['numStudents'] == 2
