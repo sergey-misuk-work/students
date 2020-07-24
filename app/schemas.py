@@ -52,3 +52,9 @@ class TokenRetrieve(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+
+class AverageForGrade(BaseModel):
+    grade: int
+    average: int
+    numStudents: int

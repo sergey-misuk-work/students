@@ -77,7 +77,7 @@ def test_students(test_db):
             first_name="David",
             last_name="Dandrea",
             date_of_birth=date(2002, 3, 4),
-            school_grade=10,
+            school_grade=8,
             students_average=80,
         ),
     )
@@ -151,8 +151,8 @@ def test_create_student(test_students, test_token, test_db):
     assert test_db.query(models.Student).count() == 4
 
     # check validation
-    student_json['school_grade'] = 13
-    student_json['students_average'] = 101
+    student_json["school_grade"] = 13
+    student_json["students_average"] = 101
 
     response = client.post(
         "/students",
@@ -164,13 +164,13 @@ def test_create_student(test_students, test_token, test_db):
 
     body = response.json()
 
-    assert 'detail' in body
+    assert "detail" in body
 
-    error_location = body['detail'][0]['loc']
-    assert error_location == ['body', 'student', 'school_grade']
+    error_location = body["detail"][0]["loc"]
+    assert error_location == ["body", "student", "school_grade"]
 
-    error_location = body['detail'][1]['loc']
-    assert error_location == ['body', 'student', 'students_average']
+    error_location = body["detail"][1]["loc"]
+    assert error_location == ["body", "student", "students_average"]
 
 
 def test_delete_student(test_students, test_token, test_db):
@@ -202,3 +202,35 @@ def test_delete_student(test_students, test_token, test_db):
     assert "deleted_at" in body
 
     assert test_db.query(models.Student).count() == 3
+
+
+def test_get_average_for_grade(test_students, test_token):
+    response = client.get(
+        "/stat/grade/6", headers={"Authorization": f"Bearer {test_token}"}
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert 'grade' in body
+    assert body['grade'] == 6
+    assert 'average' in body
+    assert body['average'] == 60
+    assert 'numStudents' in body
+    assert body['numStudents'] == 1
+
+    response = client.get(
+        "/stat/grade/8", headers={"Authorization": f"Bearer {test_token}"}
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert 'grade' in body
+    assert body['grade'] == 8
+    assert 'average' in body
+    assert body['average'] == 75
+    assert 'numStudents' in body
+    assert body['numStudents'] == 2

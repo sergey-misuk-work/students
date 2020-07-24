@@ -14,6 +14,7 @@ from auth import (
 )
 from datetime import timedelta
 from utils import insert_student
+from sqlalchemy.sql import func
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -55,6 +56,25 @@ async def delete_student(
     db.flush()
     db.commit()
     return student
+
+
+@app.get("/stat/grade/{grade}", response_model=schemas.AverageForGrade)
+async def get_average_for_grade(
+    grade: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    result = (
+        db.query(
+            models.Student.school_grade.label("grade"),
+            func.avg(models.Student.students_average).label("average"),
+            func.count(models.Student.id).label("numStudents"),
+        )
+        .filter_by(school_grade=grade)
+        .group_by(models.Student.school_grade)
+        .first()
+    )
+    return dict(zip(('grade', 'average', 'numStudents'), result))
 
 
 @app.post("/token", response_model=TokenRetrieve)
