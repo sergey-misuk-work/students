@@ -2,3 +2,5 @@ sqlalchemy
 psycopg2
 pytest
 requests
+python-jose[cryptography]
+passlib[bcrypt]
