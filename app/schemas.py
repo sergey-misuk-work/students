@@ -29,11 +29,3 @@ class TokenRetrieve(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
-
-
-class UserRetrieve(BaseModel):
-    username: str
-
-
-class UserInternal(UserRetrieve):
-    hashed_password: str
