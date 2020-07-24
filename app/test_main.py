@@ -79,6 +79,12 @@ def test_students(test_db):
     return test_db.query(models.Student).all()
 
 
+@pytest.fixture(scope="module")
+def test_token(test_user):
+    response = client.post("/token", data={"username": "test", "password": "test"})
+    return response.json()['access_token']
+
+
 def test_create_token(test_user):
     response = client.post("/token", data={"username": "test", "password": "test"})
 
@@ -93,8 +99,12 @@ def test_create_token(test_user):
     assert body["token_type"] == "bearer"
 
 
-def test_retrieve_students(test_students):
-    response = client.get("/students")
+def test_protected_routes():
+    pass
+
+
+def test_retrieve_students(test_students, test_token):
+    response = client.get("/students", headers={'Authorization': f'Bearer {test_token}'})
 
     assert response.status_code == 200
     body = response.json()
