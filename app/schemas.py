@@ -65,3 +65,7 @@ class StdDevForGrade(BaseModel):
     average: float
     stdDev: float
     numStudents: int
+
+
+class StudentDeleteAll(BaseModel):
+    numStudents: int

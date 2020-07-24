@@ -113,6 +113,17 @@ async def get_std_dev_for_grade(
     return {"grade": grade, "average": m, "stdDev": std_dev, "numStudents": n}
 
 
+@app.delete("/students", response_model=schemas.StudentDeleteAll)
+async def delete_all_students(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db.query(models.Student).delete()
+    db.flush()
+    db.commit()
+    return {"numStudents": db.query(models.Student).count()}
+
+
 @app.post("/token", response_model=TokenRetrieve)
 async def create_token(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
