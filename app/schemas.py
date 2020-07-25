@@ -26,7 +26,7 @@ class StudentCreate(StudentBase):
 
 
 class StudentRetrieve(StudentBase):
-    id: int
+    studentId: int
     createdAt: datetime
 
     class Config:

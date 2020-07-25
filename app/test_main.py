@@ -123,7 +123,7 @@ def test_retrieve_students(test_students, test_token):
 
     assert "students" in body
     for student in body["students"]:
-        assert len(str(student["id"])) == 8
+        assert len(str(student["studentId"])) == 8
 
     # check ordering
     response = client.get(
@@ -188,8 +188,8 @@ def test_create_student(test_students, test_token, test_db):
 
     body = response.json()
 
-    assert "id" in body
-    assert len(str(body["id"])) == 8
+    assert "studentId" in body
+    assert len(str(body["studentId"])) == 8
 
     assert "createdAt" in body
 
@@ -234,7 +234,7 @@ def test_delete_student(test_students, test_token, test_db):
     assert test_db.query(models.Student).count() == 4
 
     body = response.json()
-    student_id = body["id"]
+    student_id = body["studentId"]
 
     response = client.delete(
         f"/students/{student_id}", headers={"Authorization": f"Bearer {test_token}"}
@@ -329,3 +329,20 @@ def test_delete_all_students(test_students, test_token, test_db):
     assert "numStudents" in body
     assert body["numStudents"] == 0
     assert test_db.query(models.Student).count() == 0
+
+
+def test_retrieve_single_user(test_students, test_token, test_db):
+    david = test_db.query(models.Student).filter_by(firstName='David').first()
+
+    response = client.get(f'/students/{david.studentId}', headers={"Authorization": f"Bearer {test_token}"})
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert 'firstName' in body
+    assert 'lastName' in body
+    assert 'studentId' in body
+    assert 'dateOfBirth' in body
+    assert 'schoolGrade' in body
+    assert 'average' in body

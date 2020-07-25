@@ -64,7 +64,7 @@ async def delete_student(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    student = db.query(models.Student).filter_by(id=student_id).first()
+    student = db.query(models.Student).filter_by(studentId=student_id).first()
     db.delete(student)
     db.flush()
     db.commit()
@@ -81,7 +81,7 @@ async def get_average_for_grade(
         db.query(
             models.Student.schoolGrade.label("grade"),
             func.avg(models.Student.average).label("average"),
-            func.count(models.Student.id).label("numStudents"),
+            func.count(models.Student.studentId).label("numStudents"),
         )
         .filter_by(schoolGrade=grade)
         .group_by(models.Student.schoolGrade)
@@ -99,7 +99,7 @@ async def get_std_dev_for_grade(
     m, n = (
         db.query(
             func.avg(models.Student.average).label("average"),
-            func.count(models.Student.id).label("numStudents"),
+            func.count(models.Student.studentId).label("numStudents"),
         )
         .filter_by(schoolGrade=grade)
         .group_by(models.Student.schoolGrade)
@@ -133,6 +133,15 @@ async def delete_all_students(
     db.flush()
     db.commit()
     return {"numStudents": db.query(models.Student).count()}
+
+
+@app.get("/students/{student_id}", response_model=schemas.StudentRetrieve)
+async def retrieve_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return db.query(models.Student).filter_by(studentId=student_id).first()
 
 
 @app.post("/token", response_model=TokenRetrieve)
