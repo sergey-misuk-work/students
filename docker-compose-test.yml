@@ -2,7 +2,7 @@ version: '3.7'
 services:
   app:
     build: .
-    command: pytest
+    command: pytest -v
     volumes:
       - ./app:/app
     ports:
