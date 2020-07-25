@@ -4,21 +4,21 @@ from datetime import datetime
 
 
 class StudentBase(BaseModel):
-    first_name: str
-    last_name: str
-    date_of_birth: Optional[datetime]
-    school_grade: Optional[int]
-    students_average: Optional[int]
+    firstName: str
+    lastName: str
+    dateOfBirth: Optional[datetime]
+    schoolGrade: Optional[int]
+    average: Optional[int]
 
 
 class StudentCreate(StudentBase):
-    @validator("school_grade")
+    @validator("schoolGrade")
     def check_school_grade(cls, value):
         if 1 <= value <= 12:
             return value
         raise ValueError("School grade takes values between 1 and 12")
 
-    @validator("students_average")
+    @validator("average")
     def check_students_average(cls, value):
         if 0 <= value <= 100:
             return value
@@ -27,14 +27,14 @@ class StudentCreate(StudentBase):
 
 class StudentRetrieve(StudentBase):
     id: int
-    created_at: datetime
+    createdAt: datetime
 
     class Config:
         orm_mode = True
 
 
 class StudentDelete(StudentBase):
-    deleted_at: datetime = Field(default_factory=datetime.now)
+    deletedAt: datetime = Field(default_factory=datetime.now)
 
     class Config:
         orm_mode = True

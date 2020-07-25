@@ -23,7 +23,7 @@ models.Base.metadata.create_all(bind=engine)
 
 # create a test user
 session = next(get_db())
-session.merge(models.User(username="test", hashed_password=get_password_hash("test")))
+session.merge(models.User(username="test", hashedPassword=get_password_hash("test")))
 session.flush()
 session.commit()
 
@@ -32,9 +32,20 @@ app = FastAPI()
 
 @app.get("/students", response_model=schemas.StudentRetrieveList)
 async def students(
-    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+    order_by: str = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
-    students = db.query(models.Student).all()
+    students = db.query(models.Student)
+    if order_by:
+        if order_by in {"last_name", "age", "grade"}:
+            if order_by == "last_name":
+                students = students.order_by(models.Student.lastName.asc())
+            elif order_by == "age":
+                students = students.order_by(models.Student.dateOfBirth.desc())
+            elif order_by == "grade":
+                students = students.order_by(models.Student.schoolGrade.desc())
+    students = students.all()
     return schemas.StudentRetrieveList(students=students, totalStudents=len(students))
 
 
@@ -68,12 +79,12 @@ async def get_average_for_grade(
 ):
     result = (
         db.query(
-            models.Student.school_grade.label("grade"),
-            func.avg(models.Student.students_average).label("average"),
+            models.Student.schoolGrade.label("grade"),
+            func.avg(models.Student.average).label("average"),
             func.count(models.Student.id).label("numStudents"),
         )
-        .filter_by(school_grade=grade)
-        .group_by(models.Student.school_grade)
+        .filter_by(schoolGrade=grade)
+        .group_by(models.Student.schoolGrade)
         .first()
     )
     return dict(zip(("grade", "average", "numStudents"), result))
@@ -87,23 +98,23 @@ async def get_std_dev_for_grade(
 ):
     m, n = (
         db.query(
-            func.avg(models.Student.students_average).label("average"),
+            func.avg(models.Student.average).label("average"),
             func.count(models.Student.id).label("numStudents"),
         )
-        .filter_by(school_grade=grade)
-        .group_by(models.Student.school_grade)
+        .filter_by(schoolGrade=grade)
+        .group_by(models.Student.schoolGrade)
         .first()
     )
-    students_average_values = map(
+    average_values = map(
         operator.itemgetter(0),
-        db.query(models.Student.students_average).filter_by(school_grade=grade).all(),
+        db.query(models.Student.average).filter_by(schoolGrade=grade).all(),
     )
     # TODO: make more readable
     std_dev = pow(
         sum(
             map(
                 functools.partial(pow, exp=2),
-                map(functools.partial(operator.sub, m), students_average_values),
+                map(functools.partial(operator.sub, m), average_values),
             )
         )
         / n,

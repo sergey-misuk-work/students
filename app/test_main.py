@@ -8,6 +8,7 @@ from auth import get_password_hash
 import pytest
 from datetime import date
 from utils import insert_student
+import operator
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -38,7 +39,7 @@ def test_db():
 @pytest.fixture(scope="module")
 def test_user(test_db):
     test_db.merge(
-        models.User(username="test", hashed_password=get_password_hash("test"))
+        models.User(username="test", hashedPassword=get_password_hash("test"))
     )
     test_db.flush()
     test_db.commit()
@@ -54,31 +55,31 @@ def test_students(test_db):
     insert_student(
         test_db,
         models.Student(
-            first_name="Cynthia",
-            last_name="Henderson",
-            date_of_birth=date(2000, 1, 2),
-            school_grade=6,
-            students_average=60,
+            firstName="Cynthia",
+            lastName="Henderson",
+            dateOfBirth=date(2000, 1, 2),
+            schoolGrade=6,
+            average=60,
         ),
     )
     insert_student(
         test_db,
         models.Student(
-            first_name="Marilyn",
-            last_name="Snyder",
-            date_of_birth=date(2001, 2, 3),
-            school_grade=8,
-            students_average=70,
+            firstName="Marilyn",
+            lastName="Snyder",
+            dateOfBirth=date(2001, 2, 3),
+            schoolGrade=8,
+            average=70,
         ),
     )
     insert_student(
         test_db,
         models.Student(
-            first_name="David",
-            last_name="Dandrea",
-            date_of_birth=date(2002, 3, 4),
-            school_grade=8,
-            students_average=80,
+            firstName="David",
+            lastName="Dandrea",
+            dateOfBirth=date(2002, 3, 4),
+            schoolGrade=8,
+            average=80,
         ),
     )
     return test_db.query(models.Student).all()
@@ -124,14 +125,58 @@ def test_retrieve_students(test_students, test_token):
     for student in body["students"]:
         assert len(str(student["id"])) == 8
 
+    # check ordering
+    response = client.get(
+        "/students?order_by=last_name",
+        headers={"Authorization": f"Bearer {test_token}"},
+    )
+
+    body = response.json()
+
+    assert "totalStudents" in body
+    assert body["totalStudents"] == 3
+    assert "students" in body
+    assert tuple(map(operator.itemgetter("lastName"), body["students"])) == (
+        "Dandrea",
+        "Henderson",
+        "Snyder",
+    )
+
+    response = client.get(
+        "/students?order_by=age", headers={"Authorization": f"Bearer {test_token}"},
+    )
+
+    body = response.json()
+
+    assert "totalStudents" in body
+    assert body["totalStudents"] == 3
+    assert "students" in body
+    # dates are pretty complicated to be verified, so we check name order
+    assert tuple(map(operator.itemgetter("firstName"), body["students"])) == (
+        "David",
+        "Marilyn",
+        "Cynthia",
+    )
+
+    response = client.get(
+        "/students?order_by=grade", headers={"Authorization": f"Bearer {test_token}"},
+    )
+
+    body = response.json()
+
+    assert "totalStudents" in body
+    assert body["totalStudents"] == 3
+    assert "students" in body
+    assert tuple(map(operator.itemgetter("schoolGrade"), body["students"])) == (8, 8, 6)
+
 
 def test_create_student(test_students, test_token, test_db):
     student_json = {
-        "first_name": "John",
-        "last_name": "Doe",
-        "date_of_birth": "2003-04-05T00:00:00.000Z",
-        "school_grade": 5,
-        "students_average": 55,
+        "firstName": "John",
+        "lastName": "Doe",
+        "dateOfBirth": "2003-04-05T00:00:00.000Z",
+        "schoolGrade": 5,
+        "average": 55,
     }
     response = client.post(
         "/students",
@@ -146,13 +191,13 @@ def test_create_student(test_students, test_token, test_db):
     assert "id" in body
     assert len(str(body["id"])) == 8
 
-    assert "created_at" in body
+    assert "createdAt" in body
 
     assert test_db.query(models.Student).count() == 4
 
     # check validation
-    student_json["school_grade"] = 13
-    student_json["students_average"] = 101
+    student_json["schoolGrade"] = 13
+    student_json["average"] = 101
 
     response = client.post(
         "/students",
@@ -167,10 +212,10 @@ def test_create_student(test_students, test_token, test_db):
     assert "detail" in body
 
     error_location = body["detail"][0]["loc"]
-    assert error_location == ["body", "student", "school_grade"]
+    assert error_location == ["body", "student", "schoolGrade"]
 
     error_location = body["detail"][1]["loc"]
-    assert error_location == ["body", "student", "students_average"]
+    assert error_location == ["body", "student", "average"]
 
 
 def test_delete_student(test_students, test_token, test_db):
@@ -178,11 +223,11 @@ def test_delete_student(test_students, test_token, test_db):
         "/students",
         headers={"Authorization": f"Bearer {test_token}"},
         json={
-            "first_name": "John",
-            "last_name": "Doe",
-            "date_of_birth": "2003-04-05T00:00:00.000Z",
-            "school_grade": 5,
-            "students_average": 55,
+            "firstName": "John",
+            "lastName": "Doe",
+            "dateOfBirth": "2003-04-05T00:00:00.000Z",
+            "schoolGrade": 5,
+            "average": 55,
         },
     )
 
@@ -199,7 +244,7 @@ def test_delete_student(test_students, test_token, test_db):
 
     body = response.json()
 
-    assert "deleted_at" in body
+    assert "deletedAt" in body
 
     assert test_db.query(models.Student).count() == 3
 
