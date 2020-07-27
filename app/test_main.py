@@ -106,7 +106,31 @@ def test_create_token(test_user):
 
 
 def test_protected_routes():
-    pass
+    response = client.get("/students")
+    assert response.status_code == 401
+    response = client.post(
+        "/students",
+        json={
+            "firstName": "John",
+            "lastName": "Doe",
+            "dateOfBirth": "2003-04-05T00:00:00.000Z",
+            "schoolGrade": 5,
+            "average": 55,
+        },
+    )
+    assert response.status_code == 401
+    response = client.delete("/students/1")
+    assert response.status_code == 401
+    response = client.get("/stat/grade/1")
+    assert response.status_code == 401
+    response = client.get("/stat/std-dev/1")
+    assert response.status_code == 401
+    response = client.delete("/students")
+    assert response.status_code == 401
+    response = client.get("/students/1")
+    assert response.status_code == 401
+    response = client.post("/token", data={"username": "test", "password": "test"})
+    assert response.status_code == 200
 
 
 def test_retrieve_students(test_students, test_token):
