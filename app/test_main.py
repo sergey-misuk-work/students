@@ -1,13 +1,13 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database import Base, get_db
+from services.database import Base, get_db
 from main import app
 import models
-from auth import get_password_hash
+from services.auth import get_password_hash
 import pytest
 from datetime import date
-from utils import insert_student
+from services.students import insert_student
 import operator
 
 
@@ -332,17 +332,20 @@ def test_delete_all_students(test_students, test_token, test_db):
 
 
 def test_retrieve_single_user(test_students, test_token, test_db):
-    david = test_db.query(models.Student).filter_by(firstName='David').first()
+    david = test_db.query(models.Student).filter_by(firstName="David").first()
 
-    response = client.get(f'/students/{david.studentId}', headers={"Authorization": f"Bearer {test_token}"})
+    response = client.get(
+        f"/students/{david.studentId}",
+        headers={"Authorization": f"Bearer {test_token}"},
+    )
 
     assert response.status_code == 200
 
     body = response.json()
 
-    assert 'firstName' in body
-    assert 'lastName' in body
-    assert 'studentId' in body
-    assert 'dateOfBirth' in body
-    assert 'schoolGrade' in body
-    assert 'average' in body
+    assert "firstName" in body
+    assert "lastName" in body
+    assert "studentId" in body
+    assert "dateOfBirth" in body
+    assert "schoolGrade" in body
+    assert "average" in body

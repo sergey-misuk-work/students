@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from database import engine, get_db
+from services.database import engine, get_db
 import models
 import schemas
 from sqlalchemy.orm import Session
 from schemas import TokenRetrieve
 from fastapi.security import OAuth2PasswordRequestForm
-from auth import (
+from services.auth import (
     authenticate_user,
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -13,7 +13,7 @@ from auth import (
     get_current_user,
 )
 from datetime import timedelta
-from utils import insert_student
+from services.students import insert_student
 from sqlalchemy.sql import func
 import operator
 import functools
