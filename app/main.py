@@ -13,10 +13,15 @@ from services.auth import (
     get_current_user,
 )
 from datetime import timedelta
-from services.students import insert_student
-from sqlalchemy.sql import func
-import operator
-import functools
+from services.students import (
+    insert_student,
+    get_students,
+    get_student,
+    delete_student as delete_student_in_db,
+    delete_students,
+    count_students,
+)
+from services.calc import calc_average_for_grade, calc_std_dev_for_grade
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -36,16 +41,7 @@ async def students(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    students = db.query(models.Student)
-    if order_by:
-        if order_by in {"last_name", "age", "grade"}:
-            if order_by == "last_name":
-                students = students.order_by(models.Student.lastName.asc())
-            elif order_by == "age":
-                students = students.order_by(models.Student.dateOfBirth.desc())
-            elif order_by == "grade":
-                students = students.order_by(models.Student.schoolGrade.desc())
-    students = students.all()
+    students = get_students(db, order_by)
     return schemas.StudentRetrieveList(students=students, totalStudents=len(students))
 
 
@@ -64,10 +60,8 @@ async def delete_student(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    student = db.query(models.Student).filter_by(studentId=student_id).first()
-    db.delete(student)
-    db.flush()
-    db.commit()
+    student = get_student(db, student_id)
+    delete_student_in_db(db, student=student)
     return student
 
 
@@ -77,16 +71,7 @@ async def get_average_for_grade(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    result = (
-        db.query(
-            models.Student.schoolGrade.label("grade"),
-            func.avg(models.Student.average).label("average"),
-            func.count(models.Student.studentId).label("numStudents"),
-        )
-        .filter_by(schoolGrade=grade)
-        .group_by(models.Student.schoolGrade)
-        .first()
-    )
+    result = calc_average_for_grade(db, grade)
     return dict(zip(("grade", "average", "numStudents"), result))
 
 
@@ -96,32 +81,9 @@ async def get_std_dev_for_grade(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    m, n = (
-        db.query(
-            func.avg(models.Student.average).label("average"),
-            func.count(models.Student.studentId).label("numStudents"),
-        )
-        .filter_by(schoolGrade=grade)
-        .group_by(models.Student.schoolGrade)
-        .first()
-    )
-    average_values = map(
-        operator.itemgetter(0),
-        db.query(models.Student.average).filter_by(schoolGrade=grade).all(),
-    )
-    # TODO: make more readable
-    std_dev = pow(
-        sum(
-            map(
-                functools.partial(pow, exp=2),
-                map(functools.partial(operator.sub, m), average_values),
-            )
-        )
-        / n,
-        0.5,
-    )
-
-    return {"grade": grade, "average": m, "stdDev": std_dev, "numStudents": n}
+    result = calc_std_dev_for_grade(db, grade)
+    result["grade"] = grade
+    return result
 
 
 @app.delete("/students", response_model=schemas.StudentDeleteAll)
@@ -129,10 +91,8 @@ async def delete_all_students(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    db.query(models.Student).delete()
-    db.flush()
-    db.commit()
-    return {"numStudents": db.query(models.Student).count()}
+    delete_students(db)
+    return {"numStudents": count_students(db)}
 
 
 @app.get("/students/{student_id}", response_model=schemas.StudentRetrieve)
@@ -141,7 +101,7 @@ async def retrieve_student(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    return db.query(models.Student).filter_by(studentId=student_id).first()
+    return get_student(db, student_id)
 
 
 @app.post("/token", response_model=TokenRetrieve)
