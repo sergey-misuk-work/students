@@ -3,7 +3,7 @@
 ## Running app
 In order to launch application execute following command in terminal
 
-```./test.sh```
+```./run.sh```
 
 ## Viewing API docs
 API docs are available at [http://localhost/docs](http://localhost/docs)
