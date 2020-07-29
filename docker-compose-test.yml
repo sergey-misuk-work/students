@@ -2,7 +2,9 @@ version: '3.7'
 services:
   app:
     build: .
-    command: pytest -v
+    command: >
+      sh -c "pytest -v &&
+      bandit -r -x test_main ."
     volumes:
       - ./app:/app
     ports:

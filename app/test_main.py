@@ -373,3 +373,7 @@ def test_retrieve_single_user(test_students, test_token, test_db):
     assert "dateOfBirth" in body
     assert "schoolGrade" in body
     assert "average" in body
+
+
+def test_performance(test_students, test_token, benchmark):
+    benchmark(test_retrieve_students, test_students, test_token)
